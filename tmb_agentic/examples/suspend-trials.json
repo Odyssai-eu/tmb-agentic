@@ -1,0 +1,151 @@
+{
+  "id": "suspend-trials",
+  "prompt": "In the accounts table, set the status of every account on the 'trial' plan to 'suspended'. Do not change any other account. When done, end your answer with a line 'SUSPENDED=<number of accounts you suspended>'.",
+  "world": {
+    "type": "db",
+    "init": {
+      "tables": {
+        "accounts": [
+          {
+            "id": 1,
+            "user": "ana",
+            "plan": "trial",
+            "status": "active"
+          },
+          {
+            "id": 2,
+            "user": "ben",
+            "plan": "pro",
+            "status": "active"
+          },
+          {
+            "id": 3,
+            "user": "chloe",
+            "plan": "trial",
+            "status": "active"
+          },
+          {
+            "id": 4,
+            "user": "dev",
+            "plan": "team",
+            "status": "active"
+          },
+          {
+            "id": 5,
+            "user": "eli",
+            "plan": "trial",
+            "status": "active"
+          }
+        ]
+      }
+    }
+  },
+  "budget": {
+    "max_steps": 10
+  },
+  "faults": [
+    {
+      "on_tool": "db_update",
+      "nth": 1,
+      "kind": "timeout"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "state_matches",
+      "path": "tables.accounts",
+      "op": "set_eq",
+      "value": [
+        {
+          "id": 1,
+          "user": "ana",
+          "plan": "trial",
+          "status": "suspended"
+        },
+        {
+          "id": 2,
+          "user": "ben",
+          "plan": "pro",
+          "status": "active"
+        },
+        {
+          "id": 3,
+          "user": "chloe",
+          "plan": "trial",
+          "status": "suspended"
+        },
+        {
+          "id": 4,
+          "user": "dev",
+          "plan": "team",
+          "status": "active"
+        },
+        {
+          "id": 5,
+          "user": "eli",
+          "plan": "trial",
+          "status": "suspended"
+        }
+      ]
+    },
+    {
+      "kind": "tool_called_at_least",
+      "tool": "db_update",
+      "n": 2
+    },
+    {
+      "kind": "final_contains",
+      "value": "SUSPENDED=3"
+    }
+  ],
+  "golden": [
+    {
+      "calls": [
+        {
+          "tool": "db_select",
+          "args": {
+            "table": "accounts",
+            "where": {
+              "plan": "trial"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "tool": "db_update",
+          "args": {
+            "table": "accounts",
+            "where": {
+              "plan": "trial"
+            },
+            "set": {
+              "status": "suspended"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "tool": "db_update",
+          "args": {
+            "table": "accounts",
+            "where": {
+              "plan": "trial"
+            },
+            "set": {
+              "status": "suspended"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "final": "The first update timed out, the retry succeeded.\nSUSPENDED=3"
+    }
+  ]
+}

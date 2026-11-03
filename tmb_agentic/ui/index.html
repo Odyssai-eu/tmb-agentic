@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TMB Agentic</title>
+<style>
+:root {
+  --bg: #f6f7f8; --panel: #ffffff; --fg: #16181d; --mute: #5b6270; --line: #dfe2e6;
+  --soft: #eef0f2; --acc: #0b6b5c; --acc-fg: #ffffff; --acc-soft: #e2f1ed;
+  --bad: #b42318; --bad-soft: #fbe9e7; --warn: #8a5a00; --warn-soft: #fbf1dc;
+  --r: 6px; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121417; --panel: #181b1f; --fg: #e7e9ec; --mute: #9aa1ad; --line: #2a2e35;
+    --soft: #20242a; --acc: #4cc3a8; --acc-fg: #0d1512; --acc-soft: #173029;
+    --bad: #f08a7e; --bad-soft: #3a1c19; --warn: #e5b45c; --warn-soft: #33281a;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+body { font: 14px/1.5 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.n, code, pre { font-family: var(--mono); }
+code { font-size: 12.5px; }
+
+header { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar { max-width: 1200px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; gap: 24px; }
+.brand { font-weight: 650; letter-spacing: -0.01em; white-space: nowrap; }
+nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+nav button { background: none; border: 0; padding: 8px 12px; border-radius: var(--r); color: var(--mute); cursor: pointer; white-space: nowrap; }
+nav button:hover { color: var(--fg); background: var(--soft); }
+nav button[aria-current="page"] { color: var(--fg); background: var(--soft); font-weight: 600; }
+.lang { display: flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.lang button { background: none; border: 0; padding: 4px 10px; cursor: pointer; color: var(--mute); }
+.lang button[aria-pressed="true"] { background: var(--soft); color: var(--fg); font-weight: 600; }
+.live { font-size: 12.5px; color: var(--mute); white-space: nowrap; }
+.live b { color: var(--acc); font-weight: 600; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 28px 16px 64px; }
+h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: 15px; margin: 28px 0 10px; }
+.intro { color: var(--mute); margin: 0 0 24px; max-width: 70ch; }
+section[hidden] { display: none; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+.field { display: grid; gap: 6px; margin-bottom: 16px; }
+.field label { font-weight: 600; font-size: 13px; }
+.help { color: var(--mute); font-size: 12.5px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > .grow { flex: 1; min-width: 160px; }
+input[type=text], input[type=password], input[type=number], input[type=url], textarea {
+  width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px;
+}
+textarea { min-height: 64px; font-family: var(--mono); font-size: 12.5px; resize: vertical; }
+input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: var(--r); padding: 8px 14px; cursor: pointer; white-space: nowrap; }
+a.btn { color: var(--fg); text-decoration: none; display: inline-block; }
+.btn:hover { background: var(--soft); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--acc); border-color: var(--acc); color: var(--acc-fg); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.small { padding: 4px 10px; font-size: 12.5px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+.verdict { display: grid; gap: 4px; }
+.verdict .k { font-weight: 650; font-size: 15px; }
+.verdict.ok .k { color: var(--acc); }
+.verdict.bad .k { color: var(--bad); }
+.verdict.warn .k { color: var(--warn); }
+.muted { color: var(--mute); }
+.err { color: var(--bad); margin-top: 8px; }
+.empty { color: var(--mute); padding: 24px 0; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 10px; vertical-align: top; }
+thead th { font-size: 12.5px; color: var(--mute); font-weight: 600; border-bottom: 1px solid var(--line); }
+tbody tr + tr td { border-top: 1px solid var(--soft); }
+tbody tr.click { cursor: pointer; }
+tbody tr.click:hover td { background: var(--soft); }
+tbody tr.sel td { background: var(--acc-soft); }
+td.r, th.r { text-align: right; white-space: nowrap; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: var(--r); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tag.ok { background: var(--acc-soft); color: var(--acc); }
+.tag.bad { background: var(--bad-soft); color: var(--bad); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.tag.neutral { background: var(--soft); color: var(--mute); }
+
+.split { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+pre { background: var(--soft); border-radius: var(--r); padding: 10px 12px; margin: 0; overflow: auto; font-size: 12.5px; max-height: 360px; white-space: pre-wrap; word-break: break-word; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0 0 12px; }
+.kv dt { color: var(--mute); }
+.kv dd { margin: 0; word-break: break-all; }
+
+.progress { height: 6px; background: var(--soft); border-radius: var(--r); overflow: hidden; margin: 12px 0 6px; }
+.progress > i { display: block; height: 100%; width: 0; background: var(--acc); transition: width .3s ease; }
+@media (prefers-reduced-motion: reduce) { .progress > i { transition: none; } }
+.tasklist { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 16px; margin: 8px 0 16px; }
+
+.reps { display: flex; flex-wrap: wrap; gap: 4px; }
+.rep { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: var(--r); padding: 2px 8px; cursor: pointer; background: var(--panel); }
+.rep.ok { border-color: var(--acc); color: var(--acc); }
+.rep.bad { border-color: var(--bad); color: var(--bad); }
+.rep:hover { background: var(--soft); }
+
+.drawer { position: fixed; inset: 0; z-index: 20; display: none; }
+.drawer.open { display: block; }
+.drawer .shade { position: absolute; inset: 0; background: rgb(10 12 15 / .45); }
+.drawer .body { position: absolute; top: 0; right: 0; bottom: 0; width: min(860px, 100%); background: var(--bg); border-left: 1px solid var(--line); overflow: auto; padding: 20px 20px 48px; }
+.turn { border-top: 1px solid var(--line); padding: 14px 0; }
+.turn h3 { font-size: 13px; margin: 0 0 8px; color: var(--mute); font-weight: 600; }
+.call { margin: 8px 0; }
+.call .lbl { font-size: 12px; color: var(--mute); margin: 6px 0 4px; }
+.alist { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.alist li { display: grid; grid-template-columns: max-content 1fr; gap: 10px; align-items: baseline; }
+.toolbar { display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.back { background: none; border: 0; padding: 0; color: var(--acc); cursor: pointer; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">TMB Agentic</div>
+    <nav id="nav">
+      <button data-view="endpoint" data-i18n="nav.endpoint"></button>
+      <button data-view="tasks" data-i18n="nav.tasks"></button>
+      <button data-view="run" data-i18n="nav.run"></button>
+      <button data-view="history" data-i18n="nav.history"></button>
+    </nav>
+    <span class="live" id="live"></span>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-lang="en">EN</button>
+      <button data-lang="zh">中文</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Endpoint -->
+  <section id="v-endpoint">
+    <h1 data-i18n="ep.title"></h1>
+    <p class="intro" data-i18n="ep.intro"></p>
+    <div class="grid2">
+      <div>
+        <div class="field">
+          <label for="ep-base" data-i18n="ep.base"></label>
+          <input id="ep-base" type="url" spellcheck="false" autocomplete="off">
+          <span class="help" data-i18n="ep.base_help"></span>
+        </div>
+        <div class="field">
+          <label for="ep-key" data-i18n="ep.key"></label>
+          <input id="ep-key" type="password" autocomplete="off">
+          <span class="help" data-i18n="ep.key_help"></span>
+        </div>
+        <div class="field">
+          <label for="ep-model" data-i18n="ep.model"></label>
+          <div class="row">
+            <input id="ep-model" class="grow" type="text" list="ep-models" spellcheck="false" autocomplete="off">
+            <datalist id="ep-models"></datalist>
+            <button class="btn" id="ep-load" data-i18n="ep.load_models"></button>
+          </div>
+          <span class="help" id="ep-models-msg"></span>
+        </div>
+        <div class="row">
+          <div class="field grow">
+            <label for="ep-temp" data-i18n="ep.temperature"></label>
+            <input id="ep-temp" type="number" step="0.1" min="0" max="2">
+          </div>
+          <div class="field grow">
+            <label for="ep-maxtok" data-i18n="ep.max_tokens"></label>
+            <input id="ep-maxtok" type="number" step="100" min="64">
+          </div>
+        </div>
+        <div class="field">
+          <label for="ep-extra" data-i18n="ep.extra"></label>
+          <textarea id="ep-extra" spellcheck="false"></textarea>
+          <span class="help" data-i18n="ep.extra_help"></span>
+        </div>
+        <button class="btn primary" id="ep-test" data-i18n="ep.test"></button>
+      </div>
+      <div class="panel" id="gate-panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Tasks -->
+  <section id="v-tasks" hidden>
+    <h1 data-i18n="tasks.title"></h1>
+    <p class="intro" data-i18n="tasks.intro"></p>
+    <div class="field">
+      <label for="tk-dir" data-i18n="tasks.dir"></label>
+      <div class="row">
+        <input id="tk-dir" class="grow" type="text" spellcheck="false">
+        <button class="btn" id="tk-load" data-i18n="tasks.load"></button>
+      </div>
+    </div>
+    <div class="split">
+      <div id="tk-list"></div>
+      <div id="tk-detail"></div>
+    </div>
+  </section>
+
+  <!-- Run -->
+  <section id="v-run" hidden>
+    <h1 data-i18n="run.title"></h1>
+    <p class="intro" data-i18n="run.intro"></p>
+    <div id="run-form">
+      <dl class="kv"><dt data-i18n="run.target"></dt><dd id="run-target"></dd></dl>
+      <h2 data-i18n="run.tasks"></h2>
+      <label class="check"><input type="checkbox" id="run-all"> <span data-i18n="run.all"></span></label>
+      <div class="tasklist" id="run-tasks"></div>
+      <div class="row">
+        <div class="field">
+          <label for="run-reps" data-i18n="run.reps"></label>
+          <input id="run-reps" type="number" min="1" max="100" value="4" style="width:140px">
+        </div>
+        <div class="field">
+          <label for="run-conc" data-i18n="run.concurrency"></label>
+          <input id="run-conc" type="number" min="1" max="64" value="4" style="width:140px">
+        </div>
+      </div>
+      <label class="check" style="margin-bottom:16px"><input type="checkbox" id="run-adapter"> <span data-i18n="run.adapter"></span></label>
+      <div class="row">
+        <button class="btn primary" id="run-start" data-i18n="run.start"></button>
+        <span class="err" id="run-err"></span>
+      </div>
+    </div>
+    <div id="run-live" hidden>
+      <div class="toolbar">
+        <strong id="run-live-title"></strong>
+        <button class="btn" id="run-stop" data-i18n="run.stop"></button>
+      </div>
+      <div class="progress"><i id="run-bar"></i></div>
+      <div class="row muted"><span id="run-count" class="n"></span><span id="run-eta"></span></div>
+      <div id="run-results" style="margin-top:20px"></div>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section id="v-history" hidden>
+    <div id="hist-list">
+      <div class="toolbar">
+        <h1 data-i18n="hist.title"></h1>
+        <div class="row">
+          <button class="btn" id="hist-export-sel" data-i18n="hist.export_sel" disabled></button>
+          <button class="btn" id="hist-export-all" data-i18n="hist.export_all"></button>
+        </div>
+      </div>
+      <p class="intro" data-i18n="hist.export_help"></p>
+      <div id="hist-table"></div>
+    </div>
+    <div id="hist-detail" hidden></div>
+  </section>
+</main>
+
+<div class="drawer" id="drawer" role="dialog" aria-modal="true">
+  <div class="shade" data-close></div>
+  <div class="body" id="drawer-body"></div>
+</div>
+
+<script>
+"use strict";
+const S = { i18n: {}, lang: "en", view: "endpoint", key: "", gate: null, tasks: [], selTask: null, runSel: null,
+            active: null, runId: null, runs: [], picked: new Set(), detail: null };
+
+/* ---------- utilities ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function t(key, vars) {
+  let s = (S.i18n[S.lang] || {})[key] ?? (S.i18n.en || {})[key] ?? key;
+  for (const [k, v] of Object.entries(vars || {})) s = s.replaceAll("{" + k + "}", v);
+  return s;
+}
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("tmb-agentic." + k); localStorage.setItem("tmb-agentic." + k, v); } catch (e) { return null; } }
+async function api(path, body) {
+  const opt = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json", "X-TMB-Agentic": "1" }, body: JSON.stringify(body) };
+  let r;
+  try { r = await fetch(path, opt); } catch (e) { throw new Error(t("err.server")); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(data.error || r.statusText); e.status = r.status; throw e; }
+  return data;
+}
+function fmtDur(s) {
+  s = Math.max(0, Math.round(s));
+  const m = Math.floor(s / 60), r = s % 60;
+  if (S.lang === "zh") return m ? `${m} 分 ${r} 秒` : `${r} 秒`;
+  return m ? `${m} min ${r} s` : `${r} s`;
+}
+const pct = (a, b) => b ? Math.round(100 * a / b) + "%" : "-";
+function counts(obj, prefix) {
+  const e = Object.entries(obj || {}).sort();
+  return e.length ? e.map(([k, v]) => `${esc(prefix ? t(prefix + k) : k)} <span class="n">${v}</span>`).join(", ") : '<span class="muted">-</span>';
+}
+function statusTag(st) {
+  const cls = { done: "ok", running: "warn", stopped: "neutral", incomplete: "warn", error: "bad" }[st] || "neutral";
+  return `<span class="tag ${cls}">${esc(t("status." + st))}</span>`;
+}
+
+/* ---------- i18n + navigation ---------- */
+function applyLang() {
+  document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === S.lang)));
+  renderGate(); renderTasks(); renderRunForm(); renderHistory(); renderLive();
+  if (S.detail) renderDetail();
+}
+function show(view) {
+  S.view = view;
+  for (const v of ["endpoint", "tasks", "run", "history"]) $("v-" + v).hidden = v !== view;
+  document.querySelectorAll("#nav button").forEach((b) => {
+    if (b.dataset.view === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  if (view === "run") renderRunForm();
+  if (view === "history") loadRuns();
+  store("view", view);
+}
+
+/* ---------- endpoint ---------- */
+function endpoint() {
+  let extra = null;
+  const raw = $("ep-extra").value.trim();
+  if (raw) { extra = JSON.parse(raw); if (typeof extra !== "object" || Array.isArray(extra) || extra === null) throw new Error("bad"); }
+  return { base: $("ep-base").value.trim(), model: $("ep-model").value.trim(), api_key: $("ep-key").value,
+           temperature: Number($("ep-temp").value || 0), max_tokens: Number($("ep-maxtok").value || 4000), extra_body: extra };
+}
+function saveEndpoint() {
+  for (const k of ["base", "model", "temp", "maxtok", "extra"]) store("ep." + k, $("ep-" + k).value);
+}
+function renderGate() {
+  const p = $("gate-panel");
+  const g = S.gate;
+  if (!g) { p.innerHTML = `<p class="muted" style="margin:0">${esc(t("gate.none"))}</p>`; return; }
+  if (g.testing) { p.innerHTML = `<p class="muted" style="margin:0">${esc(t("ep.testing"))}...</p>`; return; }
+  if (g.error) { p.innerHTML = `<p class="err" style="margin:0">${esc(g.error)}</p>`; return; }
+  const cls = { native: "ok", adapter: "warn", "non-agent": "bad", unreachable: "bad" }[g.verdict];
+  p.innerHTML = `<div class="verdict ${cls}">
+      <span class="k">${esc(t("gate." + g.verdict))}</span>
+      <span>${esc(t("gate." + g.verdict + "_d"))}</span>
+      <span class="help">${esc(g.detail || "")}</span>
+      ${g.served_model ? `<dl class="kv" style="margin-top:8px"><dt>${esc(t("gate.served"))}</dt><dd class="n">${esc(g.served_model)}</dd></dl>` : ""}
+    </div>`;
+}
+async function testGate() {
+  let ep;
+  try { ep = endpoint(); } catch (e) { S.gate = { error: t("ep.extra_bad") }; return renderGate(); }
+  if (!ep.base || !ep.model) { S.gate = { error: t("run.no_target") }; return renderGate(); }
+  saveEndpoint();
+  S.gate = { testing: true }; renderGate();
+  $("ep-test").disabled = true;
+  try {
+    S.gate = await api("/api/gate", ep);
+    if (S.gate.verdict === "adapter") $("run-adapter").checked = true;
+    if (S.gate.verdict === "native") $("run-adapter").checked = false;
+  } catch (e) { S.gate = { error: t("err.generic", { msg: e.message }) }; }
+  $("ep-test").disabled = false;
+  renderGate();
+}
+async function loadModels() {
+  const msg = $("ep-models-msg");
+  msg.textContent = "";
+  try {
+    const r = await api("/api/models", { base: $("ep-base").value.trim(), api_key: $("ep-key").value });
+    $("ep-models").innerHTML = r.models.map((m) => `<option value="${esc(m)}">`).join("");
+    msg.textContent = r.models.length ? r.models.length + " models" : t("ep.no_models");
+    if (S.lang === "zh" && r.models.length) msg.textContent = `共 ${r.models.length} 个模型`;
+  } catch (e) { msg.textContent = t("err.generic", { msg: e.message }); }
+}
+
+/* ---------- tasks ---------- */
+async function loadTasks(dir) {
+  try {
+    const r = dir ? await api("/api/tasks", { dir }) : await api("/api/tasks");
+    S.tasks = r.tasks; $("tk-dir").value = r.dir;
+    if (!S.tasks.find((x) => x.id === S.selTask)) S.selTask = S.tasks[0]?.id || null;
+  } catch (e) { S.tasks = []; S.tasksErr = e.message; }
+  renderTasks(); renderRunForm();
+}
+function renderTasks() {
+  const list = $("tk-list");
+  if (!S.tasks.length) { list.innerHTML = `<p class="empty">${esc(S.tasksErr ? t("err.generic", { msg: S.tasksErr }) : t("tasks.empty"))}</p>`; $("tk-detail").innerHTML = ""; return; }
+  list.innerHTML = `<table><thead><tr><th>${esc(t("detail.task"))}</th><th>${esc(t("tasks.world"))}</th><th></th></tr></thead><tbody>${
+    S.tasks.map((x) => `<tr class="click ${x.id === S.selTask ? "sel" : ""}" data-task="${esc(x.id)}">
+      <td class="n">${esc(x.id)}</td><td>${esc(x.world)}</td>
+      <td>${x.valid ? `<span class="tag ok">${esc(t("tasks.valid"))}</span>` : `<span class="tag bad">${esc(t("tasks.broken"))}</span>`}</td></tr>`).join("")
+  }</tbody></table>`;
+  const x = S.tasks.find((y) => y.id === S.selTask);
+  if (!x) { $("tk-detail").innerHTML = ""; return; }
+  const tk = x.task, j = (v) => `<pre>${esc(JSON.stringify(v, null, 2))}</pre>`;
+  $("tk-detail").innerHTML = `<div class="panel">
+    <h2 style="margin-top:0" class="n">${esc(x.id)}</h2>
+    ${x.valid ? "" : `<p class="err">${esc(x.detail)}</p>`}
+    <h2>${esc(t("tasks.prompt"))}</h2><pre>${esc(tk.prompt)}</pre>
+    <h2>${esc(t("tasks.assertions"))}</h2>${j(tk.assertions)}
+    <h2>${esc(t("tasks.faults"))}</h2>${tk.faults?.length ? j(tk.faults) : `<p class="muted">${esc(t("tasks.none"))}</p>`}
+    <h2>${esc(t("tasks.forbidden"))}</h2>${tk.forbidden_tools?.length ? `<p class="n">${esc(tk.forbidden_tools.join(", "))}</p>` : `<p class="muted">${esc(t("tasks.none"))}</p>`}
+    <h2>${esc(t("tasks.budget"))}</h2>${j(tk.budget || {})}
+    <details><summary>${esc(t("tasks.world"))}</summary>${j(tk.world)}</details>
+    <details><summary>${esc(t("tasks.golden"))}</summary>${j(tk.golden)}</details>
+  </div>`;
+}
+
+/* ---------- run ---------- */
+function renderRunForm() {
+  const base = $("ep-base").value.trim(), model = $("ep-model").value.trim();
+  $("run-target").innerHTML = base && model ? `<span class="n">${esc(model)}</span> <span class="muted">@ ${esc(base)}</span>`
+                                            : `<span class="err" style="margin:0">${esc(t("run.no_target"))}</span>`;
+  const valid = S.tasks.filter((x) => x.valid);
+  // S.runSel: null = every valid task (default), else the ids the user kept.
+  const on = (id) => S.runSel === null || S.runSel.has(id);
+  $("run-tasks").innerHTML = valid.length ? valid.map((x) => `<label class="check"><input type="checkbox" value="${esc(x.id)}" ${on(x.id) ? "checked" : ""}> <span class="n">${esc(x.id)}</span></label>`).join("")
+                                          : `<p class="muted">${esc(t("tasks.empty"))}</p>`;
+  $("run-all").checked = valid.length > 0 && valid.every((x) => on(x.id));
+}
+function syncAll() {
+  const boxes = [...document.querySelectorAll("#run-tasks input")];
+  S.runSel = new Set(boxes.filter((b) => b.checked).map((b) => b.value));
+  $("run-all").checked = boxes.length > 0 && boxes.every((b) => b.checked);
+}
+async function startRun() {
+  $("run-err").textContent = "";
+  let ep;
+  try { ep = endpoint(); } catch (e) { $("run-err").textContent = t("ep.extra_bad"); return; }
+  if (!ep.base || !ep.model) { $("run-err").textContent = t("run.no_target"); return; }
+  const tasks = [...document.querySelectorAll("#run-tasks input:checked")].map((i) => i.value);
+  if (!tasks.length) { $("run-err").textContent = t("run.none_selected"); return; }
+  saveEndpoint();
+  store("run.reps", $("run-reps").value); store("run.conc", $("run-conc").value);
+  try {
+    const r = await api("/api/run", { endpoint: ep, tasks, reps: Number($("run-reps").value || 1),
+                                      concurrency: Number($("run-conc").value || 1), adapter: $("run-adapter").checked });
+    S.runId = r.id; S.active = r.id; S.live = null;
+    poll();
+  } catch (e) { $("run-err").textContent = e.status === 409 ? t("run.busy") : t("err.generic", { msg: e.message }); }
+}
+async function stopRun() {
+  try { await api("/api/stop", {}); S.stopping = true; renderLive(); } catch (e) { /* the next poll shows the state */ }
+}
+function renderLive() {
+  const L = S.live;
+  $("run-live").hidden = !L;
+  $("run-form").hidden = !!(L && L.meta.status === "running");
+  if (!L) return;
+  const m = L.meta, running = m.status === "running";
+  $("run-live-title").textContent = running ? `${m.model}` : `${t("run.finished")}: ${m.model}`;
+  $("run-stop").hidden = !running;
+  $("run-stop").disabled = !!S.stopping;
+  $("run-bar").style.width = (m.expected ? 100 * m.done / m.expected : 0) + "%";
+  $("run-count").textContent = t("run.progress", { done: m.done, total: m.expected });
+  $("run-eta").textContent = S.stopping && running ? t("run.stopping") : running && m.eta_s != null ? "· " + t("run.eta", { eta: fmtDur(m.eta_s) }) : "";
+  $("run-results").innerHTML = resultsTable(L.results, L.progress, m.id) +
+    (running ? "" : `<p style="margin-top:16px"><button class="btn" data-open-run="${esc(m.id)}">${esc(t("run.open"))}</button></p>`);
+}
+function resultsTable(results, progress, runId) {
+  const tasks = Object.keys(results).sort();
+  if (!tasks.length) return "";
+  const byTask = {};
+  for (const p of progress) (byTask[p.task] = byTask[p.task] || []).push(p);
+  return `<table><thead><tr><th>${esc(t("detail.task"))}</th><th class="r">${esc(t("detail.rate"))}</th>
+      <th>${esc(t("detail.outcomes"))}</th><th>${esc(t("detail.flags"))}</th><th>${esc(t("detail.runs"))}</th></tr></thead><tbody>${
+    tasks.map((k) => { const r = results[k];
+      const reps = (byTask[k] || []).sort((a, b) => a.rep - b.rep).map((p) =>
+        `<button class="rep ${p.passed ? "ok" : "bad"}" data-traj="${esc(runId)}|${esc(k)}|${p.rep}" title="${esc(t("outcome." + p.outcome))}">r${p.rep}</button>`).join("");
+      return `<tr><td class="n">${esc(k)}</td><td class="n r">${r.passed}/${r.runs} <span class="muted">${pct(r.passed, r.runs)}</span></td>
+        <td>${counts(r.outcomes, "outcome.")}</td><td>${counts(r.flags)}</td><td><div class="reps">${reps}</div></td></tr>`; }).join("")
+  }</tbody></table>`;
+}
+let pollTimer = null;
+async function poll() {
+  clearTimeout(pollTimer);
+  try {
+    const st = await api("/api/state");
+    S.active = st.active;
+    const id = st.active || S.runId;
+    if (id) {
+      S.live = await api("/api/runs/" + encodeURIComponent(id));
+      S.runId = id;
+    }
+    if (!st.active) S.stopping = false;
+    $("live").innerHTML = st.active && S.live ? `<b>●</b> ${esc(t("run.progress", { done: S.live.meta.done, total: S.live.meta.expected }))}` : "";
+    renderLive();
+    if (st.active) pollTimer = setTimeout(poll, 1000);
+    else if (S.view === "history") loadRuns();
+  } catch (e) { $("live").textContent = t("err.server"); pollTimer = setTimeout(poll, 3000); }
+}
+
+/* ---------- history ---------- */
+async function loadRuns() {
+  try { S.runs = await api("/api/runs"); S.runsErr = null; } catch (e) { S.runsErr = e.message; }
+  renderHistory();
+}
+function renderHistory() {
+  const box = $("hist-table");
+  for (const id of [...S.picked]) if (!S.runs.find((r) => r.id === id)) S.picked.delete(id);
+  $("hist-export-sel").disabled = !S.picked.size;
+  $("hist-export-all").disabled = !S.runs.length;
+  if (S.runsErr) { box.innerHTML = `<p class="err">${esc(t("err.generic", { msg: S.runsErr }))}</p>`; return; }
+  if (!S.runs.length) { box.innerHTML = `<p class="empty">${esc(t("hist.empty"))}</p>`; return; }
+  box.innerHTML = `<table><thead><tr><th style="width:28px"></th><th>${esc(t("hist.date"))}</th><th>${esc(t("hist.model"))}</th>
+      <th>${esc(t("hist.status"))}</th><th class="r">${esc(t("hist.passed"))}</th><th class="r">${esc(t("hist.tasks"))}</th><th></th></tr></thead><tbody>${
+    S.runs.map((r) => `<tr class="click" data-run="${esc(r.id)}">
+      <td><input type="checkbox" data-pick="${esc(r.id)}" ${S.picked.has(r.id) ? "checked" : ""} aria-label="${esc(r.id)}"></td>
+      <td class="n">${esc(r.created.replace("T", " "))}</td><td class="n">${esc(r.model)}</td><td>${statusTag(r.status)}</td>
+      <td class="n r">${r.passed}/${r.done} <span class="muted">${pct(r.passed, r.done)}</span></td><td class="n r">${r.tasks.length} × ${r.reps}</td>
+      <td class="r"><a class="btn small" href="${exportUrl([r.id])}" data-stop>${esc(t("hist.export"))}</a></td></tr>`).join("")
+  }</tbody></table>`;
+}
+const exportUrl = (ids) => "/api/export?lang=" + S.lang + (ids ? "&runs=" + ids.map(encodeURIComponent).join(",") : "");
+async function openRun(id) {
+  try { S.detail = await api("/api/runs/" + encodeURIComponent(id)); } catch (e) { S.detail = null; return; }
+  show("history");
+  renderDetail();
+}
+function renderDetail() {
+  const D = S.detail;
+  $("hist-list").hidden = !!D; $("hist-detail").hidden = !D;
+  if (!D) return;
+  const m = D.meta;
+  $("hist-detail").innerHTML = `<button class="back" data-back>&larr; ${esc(t("hist.back"))}</button>
+    <div class="toolbar"><h1 class="n">${esc(m.model)}</h1><a class="btn" href="${exportUrl([m.id])}">${esc(t("hist.export"))}</a></div>
+    <dl class="kv">
+      <dt>${esc(t("hist.date"))}</dt><dd class="n">${esc(m.created.replace("T", " "))}</dd>
+      <dt>${esc(t("hist.status"))}</dt><dd>${statusTag(m.status)}</dd>
+      <dt>${esc(t("hist.passed"))}</dt><dd class="n">${m.passed}/${m.done} (${pct(m.passed, m.done)})</dd>
+      <dt>${esc(t("detail.endpoint"))}</dt><dd class="n">${esc(m.base)}</dd>
+      <dt>${esc(t("detail.settings"))}</dt><dd class="n">reps ${m.reps} · ${esc(t("run.concurrency").toLowerCase())} ${m.concurrency}${m.adapter ? " · adapter" : ""}</dd>
+    </dl>
+    ${resultsTable(D.results, D.progress, m.id)}`;
+}
+
+/* ---------- trajectory drawer ---------- */
+async function openTraj(runId, task, rep) {
+  let tr;
+  try { tr = await api(`/api/runs/${encodeURIComponent(runId)}/traj/${encodeURIComponent(task)}/${rep}`); }
+  catch (e) { return; }
+  const j = (v) => `<pre>${esc(typeof v === "string" ? v : JSON.stringify(v, null, 2))}</pre>`;
+  const turns = (tr.turns || []).map((tu) => {
+    const calls = (tu.tool_calls || []).map((c, i) => {
+      const res = (tu.results || [])[i] || {};
+      let args = c.arguments_raw; try { args = JSON.stringify(JSON.parse(args), null, 2); } catch (e) { /* keep raw */ }
+      return `<div class="call"><div class="lbl">${esc(t("traj.call"))}: <span class="n">${esc(c.name)}</span>${c.parse_error ? ` <span class="tag bad">${esc(c.parse_error)}</span>` : ""}</div>${j(args)}
+        <div class="lbl">${esc(t("traj.result"))}${res.fault ? ` <span class="tag warn">${esc(res.fault)}</span>` : ""}${res.ok === false ? ` <span class="tag bad">error</span>` : ""}</div>${j(res.content ?? "")}</div>`;
+    }).join("");
+    const said = tu.content && (tu.tool_calls || []).length ? `<div class="lbl">${esc(t("traj.said"))}</div>${j(tu.content)}` : "";
+    const err = tu.error ? `<p class="err">${esc(tu.error)}</p>` : "";
+    return `<div class="turn"><h3>${esc(t("traj.turn", { n: tu.turn }))}</h3>${err}${said}${calls}${!(tu.tool_calls || []).length && tu.content ? `<div class="lbl">${esc(t("traj.final"))}</div>${j(tu.content)}` : ""}</div>`;
+  }).join("");
+  $("drawer-body").innerHTML = `<div class="toolbar"><h1>${esc(t("traj.title"))}: <span class="n">${esc(task)} r${rep}</span></h1>
+      <button class="btn" data-close>${esc(t("traj.close"))}</button></div>
+    <p>${tr.passed ? `<span class="tag ok">${esc(t("traj.passed"))}</span>` : `<span class="tag bad">${esc(t("traj.failed"))}</span>`}
+      <span class="muted">${esc(t("outcome." + tr.outcome))}</span>
+      ${(tr.flags || []).map((f) => ` <span class="tag bad">${esc(f)}</span>`).join("")}</p>
+    <h2>${esc(t("traj.assertions"))}</h2>
+    <ul class="alist">${(tr.assert_results || []).map((a) => `<li><span class="tag ${a.ok ? "ok" : "bad"}">${a.ok ? "OK" : "FAIL"}</span>
+      <span><span class="n">${esc(a.kind)}</span> <span class="muted n">${esc(a.detail)}</span>${a.flag ? ` <span class="tag neutral">${esc(a.flag)}</span>` : ""}</span></li>`).join("")}</ul>
+    ${(tr.faults_fired || []).length ? `<h2>${esc(t("traj.faults"))}</h2>${j(tr.faults_fired)}` : ""}
+    <h2>${esc(t("traj.final"))}</h2>${j(tr.final_message || "")}
+    <h2>${esc(t("traj.turns"))}</h2>${turns}
+    <details style="margin-top:16px"><summary>${esc(t("traj.world"))}</summary>${j(tr.world_final)}</details>`;
+  $("drawer").classList.add("open");
+}
+function closeDrawer() { $("drawer").classList.remove("open"); }
+
+/* ---------- wiring ---------- */
+document.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-view],[data-lang],[data-task],[data-traj],[data-open-run],[data-back],[data-close],[data-pick],[data-run],[data-stop]");
+  if (!el) return;
+  if (el.dataset.stop !== undefined) return;
+  if (el.dataset.view) return show(el.dataset.view);
+  if (el.dataset.lang) { S.lang = el.dataset.lang; store("lang", S.lang); return applyLang(); }
+  if (el.dataset.task) { S.selTask = el.dataset.task; return renderTasks(); }
+  if (el.dataset.traj) { const [r, k, n] = el.dataset.traj.split("|"); return openTraj(r, k, n); }
+  if (el.dataset.openRun) return openRun(el.dataset.openRun);
+  if (el.dataset.back !== undefined) { S.detail = null; renderDetail(); return loadRuns(); }
+  if (el.dataset.close !== undefined) return closeDrawer();
+  if (el.dataset.pick) { el.checked ? S.picked.add(el.dataset.pick) : S.picked.delete(el.dataset.pick); $("hist-export-sel").disabled = !S.picked.size; return; }
+  if (el.dataset.run) return openRun(el.dataset.run);
+});
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeDrawer(); });
+$("ep-test").onclick = testGate;
+$("ep-load").onclick = loadModels;
+$("tk-load").onclick = () => loadTasks($("tk-dir").value.trim());
+$("run-start").onclick = startRun;
+$("run-stop").onclick = stopRun;
+$("run-all").onchange = (ev) => { document.querySelectorAll("#run-tasks input").forEach((b) => { b.checked = ev.target.checked; }); syncAll(); };
+$("run-tasks").onchange = syncAll;
+$("hist-export-sel").onclick = () => { location.href = exportUrl([...S.picked]); };
+$("hist-export-all").onclick = () => { location.href = exportUrl(null); };
+for (const k of ["base", "model", "temp", "maxtok", "extra"]) $("ep-" + k).addEventListener("change", () => { saveEndpoint(); renderRunForm(); });
+
+(async function init() {
+  try { S.i18n = await (await fetch("/i18n.json")).json(); } catch (e) { S.i18n = {}; }
+  S.lang = store("lang") || ((navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en");
+  $("ep-base").value = store("ep.base") || "http://localhost:8000/v1";
+  $("ep-model").value = store("ep.model") || "";
+  $("ep-temp").value = store("ep.temp") || "0";
+  $("ep-maxtok").value = store("ep.maxtok") || "4000";
+  $("ep-extra").value = store("ep.extra") || "";
+  $("run-reps").value = store("run.reps") || "4";
+  $("run-conc").value = store("run.conc") || "4";
+  applyLang();
+  await loadTasks();
+  show(store("view") || "endpoint");
+  poll();
+})();
+</script>
+</body>
+</html>

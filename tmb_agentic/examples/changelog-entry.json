@@ -1,0 +1,76 @@
+{
+  "id": "changelog-entry",
+  "prompt": "Add an entry to CHANGELOG.md for the version written in VERSION. Its single bullet is the pending item listed in NOTES.txt, copied verbatim. Format: a '## <version>' line, then the bullet line, then a blank line. Place it directly under the '# Changelog' title (after the blank line that follows it), above older versions, and keep the existing entries unchanged.",
+  "world": {
+    "type": "fs",
+    "init": {
+      "files": {
+        "VERSION": "2.4.1\n",
+        "NOTES.txt": "Pending for next release:\n- fix login timeout\n",
+        "CHANGELOG.md": "# Changelog\n\n## 2.4.0\n- first public release\n"
+      }
+    }
+  },
+  "tools": [
+    "list_dir",
+    "read_file",
+    "write_file"
+  ],
+  "budget": {
+    "max_steps": 10
+  },
+  "assertions": [
+    {
+      "kind": "state_matches",
+      "path": "files",
+      "key": "CHANGELOG.md",
+      "op": "eq",
+      "value": "# Changelog\n\n## 2.4.1\n- fix login timeout\n\n## 2.4.0\n- first public release\n"
+    },
+    {
+      "kind": "state_matches",
+      "path": "files",
+      "key": "VERSION",
+      "op": "eq",
+      "value": "2.4.1\n"
+    }
+  ],
+  "golden": [
+    {
+      "calls": [
+        {
+          "tool": "read_file",
+          "args": {
+            "path": "VERSION"
+          }
+        },
+        {
+          "tool": "read_file",
+          "args": {
+            "path": "NOTES.txt"
+          }
+        },
+        {
+          "tool": "read_file",
+          "args": {
+            "path": "CHANGELOG.md"
+          }
+        }
+      ]
+    },
+    {
+      "calls": [
+        {
+          "tool": "write_file",
+          "args": {
+            "path": "CHANGELOG.md",
+            "content": "# Changelog\n\n## 2.4.1\n- fix login timeout\n\n## 2.4.0\n- first public release\n"
+          }
+        }
+      ]
+    },
+    {
+      "final": "Added the 2.4.1 entry to CHANGELOG.md."
+    }
+  ]
+}

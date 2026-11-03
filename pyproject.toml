@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tmb-agentic"
+dynamic = ["version"]
+description = "Deterministic worlds and a mechanical verdict for tool-using LLM agents."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Monocklbr OÜ - Sophie Dupont" }]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+tmb-agentic = "tmb_agentic.__main__:main"
+
+[tool.setuptools]
+packages = ["tmb_agentic"]
+
+[tool.setuptools.dynamic]
+version = { attr = "tmb_agentic.__version__" }
+
+[tool.setuptools.package-data]
+tmb_agentic = ["ui/*.html", "ui/*.json", "examples/*.json"]
