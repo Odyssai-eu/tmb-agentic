@@ -103,7 +103,7 @@ as one, nor as a score of any other benchmark.
 
 ## License
 
-Copyright 2026 Monocklbr OÜ - Sophie Dupont.
+Copyright 2026 Monoklbr OÜ - Sophie Dupont.
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) and
 [NOTICE](NOTICE).
